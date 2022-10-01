@@ -1,3 +1,4 @@
+import random
 import cv2 
 import numpy as np 
 import mediapipe as mp 
@@ -24,7 +25,7 @@ class Text():
   
   def draw(self,win,outline=None):
     font = pygame.font.Font(self.font, self.size)
-    text = font.render(self.text, 1, self.text_color)
+    text = font.render(self.text, True, self.text_color)
     win.blit(text, (self.x, self.y))
   
 class Button():
@@ -78,8 +79,8 @@ def start_page():
 
 
   window.blit(bg1, (0,0))
-  high_score_text = Text("#f2e30f",10,10,40,silkscreen,f"HighScore:")
-  high_score_number = Text("#f2e30f",10,50,50,silkscreen,f"{high_score}")
+  high_score_text = Text("#1c1e38",10,10,35,gow,f"HighScore")
+  high_score_number = Text("#1c1e38",10,50,50,gow,f"{high_score}")
   high_score_text.draw(window)
   high_score_number.draw(window)
 
@@ -93,8 +94,12 @@ def start_page():
   frame = pygame.transform.flip(frame, True, False)
   window.blit(frame, (220, 0))
   
-  button_start = Button("#34eb5b","#000000",1000, 50, 180,70,50,marcellus, text="Start")
+
+  window.blit(title, (335,335))
+  button_start = Button("#34eb5b","#000000",1030, 200, 200,70,50,marcellus, text="Start")
   button_start.draw(window,"#000000")
+  button_exit = Button((255,0,0),"#000000",1030, 300, 200,70,50,marcellus, text="Quit")
+  button_exit.draw(window, (0,0,0))
   if button_start.check_click():
     page = "game"
     print("the page was changed, the button was pressed")
@@ -112,19 +117,26 @@ def start_page():
       print(pred)
 
 def game_page():
-  
+
+  global page,high_score
+
+
   start_time = time.time()
   current_time = time.time()
-  given_time = 10
+  given_time = 60
   total_time = start_time + given_time
   score = 0
+  increment = 2
   level_completed = False
+  level_name = label[random.randint(0, len(label) -1)]
+  previous_level_name = ""
 
   while current_time < total_time:
     current_time = time.time()
-    total_time = total_time + given_time
+    remaining_time = int(total_time - current_time)
+    total_time = start_time + given_time
 
-    global page
+    
 
     for event in pygame.event.get():
           if event.type == pygame.QUIT:
@@ -134,11 +146,14 @@ def game_page():
 
     window.blit(bg1, (0,0))
 
-    score_text = Text("#f2e30f",10,10,40,silkscreen,f"Score:")
-    score_number = Text("#f2e30f",10,50,50,silkscreen,f"{score}")
-    score_text.draw(window)
-    score_number.draw(window)
+    score_text = Text("#f2e30f",1040,5,50,silkscreen,f"Score:").draw(window)
+    score_number = Text("#f2e30f",1150,50,60,silkscreen,f"{score}").draw(window)
+    level_name_text = Text("#ffffff",150,570,70,gow,f"{level_name}").draw(window)
+    window.blit(poseImages[level_name],(800,500))
 
+
+    window.blit(clockimg, (10,10))
+    remaining_time_text = Text("#1c1e38",100,10, 50,silkscreen,f"{remaining_time}").draw(window)
 
     lst = []
     success, img = cap.read()
@@ -151,23 +166,42 @@ def game_page():
     window.blit(frame, (220, 0))
 
 
-    button_quit = Button((255,0,0),"#000000",920, 50, 200,70,50,marcellus, text="QUIT")
+    button_quit = Button((255,0,0),"#000000",1030, 300, 200,70,50,marcellus, text="QUIT")
     button_quit.draw(window, (0,0,0))
     if button_quit.check_click():
       page = "start"
       break
 
-    if res.pose_landmarks and inFrame(res.pose_landmarks.landmark):
-        for i in res.pose_landmarks.landmark:
-          lst.append(i.x - res.pose_landmarks.landmark[0].x)
-          lst.append(i.y - res.pose_landmarks.landmark[0].y)
+    if level_completed:
+      previous_level_name = level_name
+      while(level_name == previous_level_name):
+        level_name = label[random.randint(0, len(label) -1)]
+        level_completed = False
 
-        lst = np.array(lst).reshape(1,-1)
 
-        p = model.predict(lst)
-        pred = label[np.argmax(p)]
-        print(pred)
+      
     
+    if res.pose_landmarks and inFrame(res.pose_landmarks.landmark):
+      for i in res.pose_landmarks.landmark:
+        lst.append(i.x - res.pose_landmarks.landmark[0].x)
+        lst.append(i.y - res.pose_landmarks.landmark[0].y)
+
+      lst = np.array(lst).reshape(1,-1)
+
+      p = model.predict(lst)
+      pred = label[np.argmax(p)]
+      print(pred)
+      if pred == level_name:
+        given_time += increment
+        score += 1
+        level_completed = True
+    else:
+      notvisible_text = Text((255,0,0),140,450,40,silkscreen,"! Make Sure your whole body is visible")
+      notvisible_text.draw(window)
+      window.blit(notvisible,(0,230))
+      pred = None
+
+    high_score = max(high_score,score)
     pygame.display.update()
     clock.tick(fps)
   page = "start"
@@ -177,6 +211,8 @@ def game_page():
 #fonts
 marcellus = "Fonts\Marcellus-Regular.ttf"
 silkscreen = "Fonts\Silkscreen-Regular.ttf"
+nabla = "Fonts\\Nabla.ttf"
+gow = "Fonts\god-of-war.ttf"
 
 ##button area
 
@@ -205,6 +241,15 @@ clock = pygame.time.Clock()
 #Images
 bg1 = pygame.image.load('C:\D\Coding\CV Game Project\PROJECT\Background_Images\Background1.png').convert_alpha()
 bg1 = pygame.transform.scale(bg1,(width,height))
+notvisible = pygame.image.load(r'Images\not_visible.png').convert_alpha()
+notvisible = pygame.transform.scale(notvisible, (220,220))
+clockimg = pygame.image.load(r'Images\clock.png').convert_alpha()
+clockimg = pygame.transform.scale(clockimg, (70,70))
+title = pygame.image.load(r'Images\title.png').convert_alpha()
+title = pygame.transform.scale(title, (600,600))
+poseImages = {i: pygame.transform.scale(pygame.image.load(f"poseImages\{i}.png").convert_alpha(),(200,200)) for i in label}
+
+
 
 
 #game variables
@@ -212,14 +257,12 @@ page = "start"
 high_score = 10
 
 #main loop
-# while True:
+while True:
 
-#   if page == "start":
-#     start_page()
-#   elif page == "game":
-#     game_page()
+  if page == "start":
+    start_page()
+  elif page == "game":
+    game_page()
 
-#   pygame.display.update()
-#   clock.tick(fps)
-
-print(label)
+  pygame.display.update()
+  clock.tick(fps)
