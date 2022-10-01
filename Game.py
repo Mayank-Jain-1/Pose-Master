@@ -29,7 +29,7 @@ class Button():
         pygame.draw.rect(win, self.color, (self.x,self.y,self.width,self.height),0)
         
         if self.text != '':
-            font = pygame.font.Font(pygame.font.get_default_font(), 60)
+            font = pygame.font.Font('C:\D\Coding\CV Game Project\PROJECT\Fonts\Marcellus-Regular.ttf', 60)
             text = font.render(self.text, 1, (0,0,0))
             win.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
 
@@ -47,8 +47,8 @@ class Button():
                 return True
       return False
 
-
 def start_page():
+
   
   global page
 
@@ -57,6 +57,8 @@ def start_page():
             pygame.quit()
             break
 
+                
+  window.blit(bg1, (0,0))
   lst = []
   success, img = cap.read()
   img = cv2.flip(img, 1) 
@@ -65,7 +67,7 @@ def start_page():
   imgRGB = np.rot90(imgRGB)
   frame = pygame.surfarray.make_surface(imgRGB).convert()
   frame = pygame.transform.flip(frame, True, False)
-  window.blit(frame, (0, 0))
+  window.blit(frame, (220, 0))
   
   button_start.draw(window, (0,0,0))
   if button_start.check_click():
@@ -102,7 +104,7 @@ def game_page():
   imgRGB = np.rot90(imgRGB)
   frame = pygame.surfarray.make_surface(imgRGB).convert()
   frame = pygame.transform.flip(frame, True, False)
-  window.blit(frame, (0, 0))
+  window.blit(frame, (220, 0))
 
   button_started.draw(window, (0,0,0))
   if button_started.check_click():
@@ -123,24 +125,35 @@ def game_page():
     print("Make sure your whole body is in the camera")
 
 
+##button area
 button_start = Button("#34eb5b",920, 50, 200,70, text="Start")
 button_started = Button("#34eb5b",920, 50, 200,70, text="Started")
+#/////
 
+
+#important variables do not touch
 model  = load_model("model.h5")
 label = np.load("labels.npy")
 holistic = mp.solutions.pose
 holis = holistic.Pose()
 drawing = mp.solutions.drawing_utils
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-cap.set(3,1240)
-cap.set(4,700)
+cap.set(3,800)
+cap.set(4,100)
 
 width, height = 1240 , 700
 window = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Hole in the Screen")
 fps = 30
 clock = pygame.time.Clock()
+#/////////
 
+
+#Images
+bg1 = pygame.image.load('C:\D\Coding\CV Game Project\PROJECT\Background_Images\Background1.png').convert_alpha()
+bg1 = pygame.transform.scale(bg1,(width,height))
+
+#game variables
 start_time = time.time()
 print(start_time)
 total_time = 60
