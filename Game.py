@@ -7,28 +7,32 @@ import pygame, time
 pygame.init()
 
 
+
 def inFrame(lst):
 	if lst[28].visibility > 0.6 and lst[27].visibility > 0.6 and lst[15].visibility>0.6 and lst[16].visibility>0.6:
 		return True 
 	return False
 
 class Text():
-  def __init__(self,color,x,y,text = ''):
-    self.color = color
+  def __init__(self,text_color, x,y,size,font,text = '',):
+    self.text_color = text_color
     self.x = x
     self.y = y
+    self.size = size
+    self.font = font
     self.text = text
   
   def draw(self,win,outline=None):
-    font = pygame.font.Font('C:\D\Coding\CV Game Project\PROJECT\Fonts\Marcellus-Regular.ttf', 60)
-    text = font.render(self.text, 1, (0,0,0))
+    font = pygame.font.Font(self.font, self.size)
+    text = font.render(self.text, 1, self.text_color)
     win.blit(text, (self.x, self.y))
   
-      
-
 class Button():
-    def __init__(self, color, x,y,width,height, text=''):
+    def __init__(self, color,text_color, x,y,width,height,font_size,font, text=''):
         self.color = color
+        self.text_color = text_color
+        self.font_size = font_size
+        self.font = font
         self.x = x
         self.y = y
         self.width = width
@@ -43,8 +47,8 @@ class Button():
         pygame.draw.rect(win, self.color, (self.x,self.y,self.width,self.height),0)
         
         if self.text != '':
-            font = pygame.font.Font('C:\D\Coding\CV Game Project\PROJECT\Fonts\Marcellus-Regular.ttf', 60)
-            text = font.render(self.text, 1, (0,0,0))
+            font = pygame.font.Font(self.font, self.font_size)
+            text = font.render(self.text, 1, self.text_color)
             win.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
 
     def isOver(self, pos):
@@ -72,8 +76,13 @@ def start_page():
             pygame.quit()
             break
 
-                
+
   window.blit(bg1, (0,0))
+  high_score_text = Text("#f2e30f",10,10,40,silkscreen,f"HighScore:")
+  high_score_number = Text("#f2e30f",10,50,50,silkscreen,f"{high_score}")
+  high_score_text.draw(window)
+  high_score_number.draw(window)
+
   lst = []
   success, img = cap.read()
   img = cv2.flip(img, 1) 
@@ -84,7 +93,8 @@ def start_page():
   frame = pygame.transform.flip(frame, True, False)
   window.blit(frame, (220, 0))
   
-  button_start.draw(window, (0,0,0))
+  button_start = Button("#34eb5b","#000000",1000, 50, 180,70,50,marcellus, text="Start")
+  button_start.draw(window,"#000000")
   if button_start.check_click():
     page = "game"
     print("the page was changed, the button was pressed")
@@ -100,24 +110,36 @@ def start_page():
       p = model.predict(lst)
       pred = label[np.argmax(p)]
       print(pred)
-  else:
-    print("Make sure your whole body is in the camera")
 
 def game_page():
   
   start_time = time.time()
   current_time = time.time()
-  total_time = start_time + 10
+  given_time = 10
+  total_time = start_time + given_time
+  score = 0
+  level_completed = False
 
   while current_time < total_time:
     current_time = time.time()
+    total_time = total_time + given_time
+
     global page
 
     for event in pygame.event.get():
           if event.type == pygame.QUIT:
               pygame.quit()
               break
-    
+  
+
+    window.blit(bg1, (0,0))
+
+    score_text = Text("#f2e30f",10,10,40,silkscreen,f"Score:")
+    score_number = Text("#f2e30f",10,50,50,silkscreen,f"{score}")
+    score_text.draw(window)
+    score_number.draw(window)
+
+
     lst = []
     success, img = cap.read()
     img = cv2.flip(img, 1) 
@@ -128,10 +150,12 @@ def game_page():
     frame = pygame.transform.flip(frame, True, False)
     window.blit(frame, (220, 0))
 
-    button_started.draw(window, (0,0,0))
-    if button_started.check_click():
+
+    button_quit = Button((255,0,0),"#000000",920, 50, 200,70,50,marcellus, text="QUIT")
+    button_quit.draw(window, (0,0,0))
+    if button_quit.check_click():
       page = "start"
-      print("the page was changed, the button was pressed")
+      break
 
     if res.pose_landmarks and inFrame(res.pose_landmarks.landmark):
         for i in res.pose_landmarks.landmark:
@@ -143,19 +167,20 @@ def game_page():
         p = model.predict(lst)
         pred = label[np.argmax(p)]
         print(pred)
-    else:
-      print("Make sure your whole body is in the camera")
     
     pygame.display.update()
     clock.tick(fps)
-
-
   page = "start"
 
 
+
+#fonts
+marcellus = "Fonts\Marcellus-Regular.ttf"
+silkscreen = "Fonts\Silkscreen-Regular.ttf"
+
 ##button area
-button_start = Button("#34eb5b",920, 50, 200,70, text="Start")
-button_started = Button("#34eb5b",920, 50, 200,70, text="Started")
+
+
 #/////
 
 
@@ -181,18 +206,20 @@ clock = pygame.time.Clock()
 bg1 = pygame.image.load('C:\D\Coding\CV Game Project\PROJECT\Background_Images\Background1.png').convert_alpha()
 bg1 = pygame.transform.scale(bg1,(width,height))
 
+
 #game variables
 page = "start"
-high_score = 0
+high_score = 10
 
 #main loop
-while True:
+# while True:
 
-  if page == "start":
-    start_page()
-  elif page == "game":
-    game_page()
+#   if page == "start":
+#     start_page()
+#   elif page == "game":
+#     game_page()
 
-  pygame.display.update()
-  clock.tick(fps)
+#   pygame.display.update()
+#   clock.tick(fps)
 
+print(label)
