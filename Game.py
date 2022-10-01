@@ -12,6 +12,20 @@ def inFrame(lst):
 		return True 
 	return False
 
+class Text():
+  def __init__(self,color,x,y,text = ''):
+    self.color = color
+    self.x = x
+    self.y = y
+    self.text = text
+  
+  def draw(self,win,outline=None):
+    font = pygame.font.Font('C:\D\Coding\CV Game Project\PROJECT\Fonts\Marcellus-Regular.ttf', 60)
+    text = font.render(self.text, 1, (0,0,0))
+    win.blit(text, (self.x, self.y))
+  
+      
+
 class Button():
     def __init__(self, color, x,y,width,height, text=''):
         self.color = color
@@ -50,6 +64,7 @@ class Button():
 def start_page():
 
   
+
   global page
 
   for event in pygame.event.get():
@@ -89,40 +104,53 @@ def start_page():
     print("Make sure your whole body is in the camera")
 
 def game_page():
-  global page
-
-  for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            break
   
-  lst = []
-  success, img = cap.read()
-  img = cv2.flip(img, 1) 
-  imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-  res = holis.process(imgRGB)
-  imgRGB = np.rot90(imgRGB)
-  frame = pygame.surfarray.make_surface(imgRGB).convert()
-  frame = pygame.transform.flip(frame, True, False)
-  window.blit(frame, (220, 0))
+  start_time = time.time()
+  current_time = time.time()
+  total_time = start_time + 10
 
-  button_started.draw(window, (0,0,0))
-  if button_started.check_click():
-    page = "start"
-    print("the page was changed, the button was pressed")
+  while current_time < total_time:
+    current_time = time.time()
+    global page
 
-  if res.pose_landmarks and inFrame(res.pose_landmarks.landmark):
-      for i in res.pose_landmarks.landmark:
-        lst.append(i.x - res.pose_landmarks.landmark[0].x)
-        lst.append(i.y - res.pose_landmarks.landmark[0].y)
+    for event in pygame.event.get():
+          if event.type == pygame.QUIT:
+              pygame.quit()
+              break
+    
+    lst = []
+    success, img = cap.read()
+    img = cv2.flip(img, 1) 
+    imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    res = holis.process(imgRGB)
+    imgRGB = np.rot90(imgRGB)
+    frame = pygame.surfarray.make_surface(imgRGB).convert()
+    frame = pygame.transform.flip(frame, True, False)
+    window.blit(frame, (220, 0))
 
-      lst = np.array(lst).reshape(1,-1)
+    button_started.draw(window, (0,0,0))
+    if button_started.check_click():
+      page = "start"
+      print("the page was changed, the button was pressed")
 
-      p = model.predict(lst)
-      pred = label[np.argmax(p)]
-      print(pred)
-  else:
-    print("Make sure your whole body is in the camera")
+    if res.pose_landmarks and inFrame(res.pose_landmarks.landmark):
+        for i in res.pose_landmarks.landmark:
+          lst.append(i.x - res.pose_landmarks.landmark[0].x)
+          lst.append(i.y - res.pose_landmarks.landmark[0].y)
+
+        lst = np.array(lst).reshape(1,-1)
+
+        p = model.predict(lst)
+        pred = label[np.argmax(p)]
+        print(pred)
+    else:
+      print("Make sure your whole body is in the camera")
+    
+    pygame.display.update()
+    clock.tick(fps)
+
+
+  page = "start"
 
 
 ##button area
@@ -154,10 +182,6 @@ bg1 = pygame.image.load('C:\D\Coding\CV Game Project\PROJECT\Background_Images\B
 bg1 = pygame.transform.scale(bg1,(width,height))
 
 #game variables
-start_time = time.time()
-print(start_time)
-total_time = 60
-time_per_move = 5
 page = "start"
 high_score = 0
 
