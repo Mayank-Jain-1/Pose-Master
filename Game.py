@@ -88,7 +88,7 @@ def home_page():
       page = "start"
       break
     if button_quit.check_click() and time.time() - start_time > 0.5:
-      high_score_file.close()
+      high_score_file_read.close()
       pygame.display.quit()
       pygame.quit()
       sys.exit() 
@@ -343,7 +343,7 @@ while True:
 
   for event in pygame.event.get():
       if event.type == pygame.QUIT:
-          high_score_file.close()
+          high_score_file_read.close()
           pygame.quit()
           sys.exit()
 
