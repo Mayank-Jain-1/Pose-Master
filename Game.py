@@ -5,9 +5,8 @@ import mediapipe as mp
 from keras.models import load_model 
 import pygame, time
 
+
 pygame.init()
-
-
 
 def inFrame(lst):
 	if lst[28].visibility > 0.6 and lst[27].visibility > 0.6 and lst[15].visibility>0.6 and lst[16].visibility>0.6:
@@ -123,10 +122,10 @@ def game_page():
 
   start_time = time.time()
   current_time = time.time()
-  given_time = 60
+  given_time = 2
   total_time = start_time + given_time
   score = 0
-  increment = 2
+  increment = 1
   level_completed = False
   level_name = label[random.randint(0, len(label) -1)]
   previous_level_name = ""
@@ -139,9 +138,9 @@ def game_page():
     
 
     for event in pygame.event.get():
-          if event.type == pygame.QUIT:
-              pygame.quit()
-              break
+      if event.type == pygame.QUIT:
+          pygame.quit()
+          break
   
 
     window.blit(bg1, (0,0))
@@ -204,9 +203,48 @@ def game_page():
     high_score = max(high_score,score)
     pygame.display.update()
     clock.tick(fps)
-  page = "start"
+  end_game(score, current_time - start_time)
+
+def end_game(score, time_taken):
+  
+  global page
+
+  start_time = time.time()
+  gotime = 0
+  while True:
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+          pygame.quit()
+          break
+    
+    window.blit(bg2, (0,0))
+
+    if (time.time() - start_time < gotime):
+      window.blit(pygame.transform.scale(gameover,(600,400)), (300, 100))
+    else:
+      window.blit(pygame.transform.scale(title,(800,800)), (250,-200))
+      score_text = Text("#252945",100,300,50,silkscreen,f"Score: {score}").draw(window)
+      time_taken_text = Text("#252945",600,300,50,silkscreen,f"Time Played: {int(time_taken)} s ").draw(window)
+      high_score_text = Text("#252945",100,400,50,silkscreen,f"HighScore: {high_score}").draw(window)
+      time_per_move_text = Text("#252945",600,400,50,silkscreen,f"Time Per Move: {0 if score == 0 else time_taken/score} s").draw(window)
+
+      button_exit = Button("#e32938","#000000",620, 550, 430,100,60,marcellus, text="Exit")
+      button_exit.draw(window, (0,0,0))
+      button_play_again = Button("#49e68a","#000000",220, 550, 430,100,60,marcellus, text="Play Again")
+      button_play_again.draw(window,"#000000")
+      if button_play_again.check_click():
+        page = "game"
+        break
+      if button_exit.check_click():
+        page = "start"
+        break
+      
 
 
+    pygame.display.update()
+    clock.tick(fps)
+
+  
 
 #fonts
 marcellus = "Fonts\Marcellus-Regular.ttf"
@@ -239,8 +277,12 @@ clock = pygame.time.Clock()
 
 
 #Images
-bg1 = pygame.image.load('C:\D\Coding\CV Game Project\PROJECT\Background_Images\Background1.png').convert_alpha()
+bg1 = pygame.image.load('Background_Images\Background1.png').convert_alpha()
 bg1 = pygame.transform.scale(bg1,(width,height))
+bg2 = pygame.image.load('Background_Images\Background2.png').convert_alpha()
+bg2 = pygame.transform.scale(bg2,(width,height))
+bg3 = pygame.image.load('Background_Images\Background3.png').convert_alpha()
+bg3 = pygame.transform.scale(bg3,(width,height))
 notvisible = pygame.image.load(r'Images\not_visible.png').convert_alpha()
 notvisible = pygame.transform.scale(notvisible, (220,220))
 clockimg = pygame.image.load(r'Images\clock.png').convert_alpha()
@@ -248,7 +290,7 @@ clockimg = pygame.transform.scale(clockimg, (70,70))
 title = pygame.image.load(r'Images\title.png').convert_alpha()
 title = pygame.transform.scale(title, (600,600))
 poseImages = {i: pygame.transform.scale(pygame.image.load(f"poseImages\{i}.png").convert_alpha(),(200,200)) for i in label}
-
+gameover = pygame.image.load("Images\gameover3.png").convert_alpha()
 
 
 
@@ -259,10 +301,16 @@ high_score = 10
 #main loop
 while True:
 
+  for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+          pygame.quit()
+          break
   if page == "start":
     start_page()
   elif page == "game":
     game_page()
+
+  
 
   pygame.display.update()
   clock.tick(fps)
