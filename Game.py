@@ -44,7 +44,6 @@ class Button():
         self.text = text
 
     def draw(self,win,outline=None):
-        #Call this method to draw the button on the screen
         if outline:
             pygame.draw.rect(win, outline, (self.x-2,self.y-2,self.width+4,self.height+4),0)
             
@@ -56,7 +55,6 @@ class Button():
             win.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
 
     def isOver(self, pos):
-        #Pos is the mouse position or a tuple of (x,y) coordinates
         if pos[0] > self.x and pos[0] < self.x + self.width:
             if pos[1] > self.y and pos[1] < self.y + self.height:
                 return True
@@ -90,6 +88,7 @@ def home_page():
       page = "start"
       break
     if button_quit.check_click() and time.time() - start_time > 0.5:
+      high_score_file.close()
       pygame.display.quit()
       pygame.quit()
       sys.exit() 
@@ -227,7 +226,6 @@ def game_page():
 
       p = model.predict(lst)
       pred = label[np.argmax(p)]
-      print(pred)
       if pred == level_name:
         given_time += increment
         score += 1
@@ -239,6 +237,7 @@ def game_page():
       pred = None
 
     high_score = max(high_score,score)
+    high_score_file.write(str(high_score))
     pygame.display.update()
     clock.tick(fps)
   end_game(score, current_time - start_time)
@@ -290,13 +289,11 @@ silkscreen = "Fonts\Silkscreen-Regular.ttf"
 nabla = "Fonts\\Nabla.ttf"
 gow = "Fonts\god-of-war.ttf"
 
-#/////
 
 
 #important variables do not touch
 model  = load_model("model.h5")
 label = np.load("labels.npy")
-print(label)
 holistic = mp.solutions.pose
 holis = holistic.Pose()
 drawing = mp.solutions.drawing_utils
@@ -309,7 +306,6 @@ window = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Pose Master")
 fps = 30
 clock = pygame.time.Clock()
-#/////////
 
 
 #Images
@@ -335,13 +331,15 @@ gameover = pygame.image.load("Images\gameover3.png").convert_alpha()
 
 #game variables
 page = "home"
-high_score = 10
+high_score_file = open("high_score.txt","r+")
+high_score = int(high_score_file.read()) 
 
 #main loop
 while True:
 
   for event in pygame.event.get():
       if event.type == pygame.QUIT:
+          high_score_file.close()
           pygame.quit()
           sys.exit()
 
