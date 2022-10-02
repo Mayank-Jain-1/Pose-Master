@@ -1,4 +1,5 @@
 import random
+from tracemalloc import start
 import cv2 
 import numpy as np 
 import mediapipe as mp 
@@ -8,6 +9,8 @@ import sys
 
 
 pygame.init()
+icon = pygame.image.load('Images\clock.png')
+pygame.display.set_icon(icon)
 
 def inFrame(lst):
 	if lst[28].visibility > 0.6 and lst[27].visibility > 0.6 and lst[15].visibility>0.6 and lst[16].visibility>0.6:
@@ -86,11 +89,14 @@ def home_page():
     if button_start.check_click():
       page = "start"
       break
-    if button_quit.check_click() and time.time() - start_time > 4:
+    if button_quit.check_click() and time.time() - start_time > 0.5:
       pygame.display.quit()
       pygame.quit()
-      sys.exit()
-
+      sys.exit() 
+    
+    pygame.display.update()
+    clock.tick(fps)
+    
 def start_page():
 
   
@@ -148,12 +154,13 @@ def game_page():
 
   start_time = time.time()
   current_time = time.time()
-  given_time = 30
+  given_time = 60
   total_time = start_time + given_time
   score = 0
-  increment = 1
+  increment = 1.5
   level_completed = False
   level_name = label[random.randint(0, len(label) -1)]
+  level_start_time = start_time
   previous_level_name = ""
 
   while current_time < total_time:
@@ -196,12 +203,18 @@ def game_page():
     if button_quit.check_click():
       break
 
+    if current_time - level_start_time >= 5:
+      level_completed = True
+      level_start_time = time.time()
+
+
     if level_completed:
       previous_level_name = level_name
-      while(level_name == previous_level_name) and level_name == "kicking":
+      while(level_name == previous_level_name):
         level_name = label[random.randint(0, len(label) -1)]
         level_completed = False
 
+    
 
       
     
@@ -277,15 +290,13 @@ silkscreen = "Fonts\Silkscreen-Regular.ttf"
 nabla = "Fonts\\Nabla.ttf"
 gow = "Fonts\god-of-war.ttf"
 
-##button area
-
-
 #/////
 
 
 #important variables do not touch
 model  = load_model("model.h5")
 label = np.load("labels.npy")
+print(label)
 holistic = mp.solutions.pose
 holis = holistic.Pose()
 drawing = mp.solutions.drawing_utils
@@ -295,7 +306,7 @@ cap.set(4,100)
 
 width, height = 1240 , 700
 window = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Hole in the Screen")
+pygame.display.set_caption("Pose Master")
 fps = 30
 clock = pygame.time.Clock()
 #/////////
@@ -317,7 +328,7 @@ clockimg = pygame.transform.scale(clockimg, (70,70))
 title = pygame.image.load(r'Images\title.png').convert_alpha()
 title = pygame.transform.scale(title, (600,600))
 title_with_man = pygame.image.load(r'Images\title_with_man.png').convert_alpha()
-poseImages = {i: pygame.transform.scale(pygame.image.load(f"poseImages\{i}.png").convert_alpha(),(200,200)) for i in label}
+poseImages = {i: pygame.transform.scale(pygame.image.load(f"poseImages\{i}.png").convert_alpha(),(370,250)) for i in label}
 gameover = pygame.image.load("Images\gameover3.png").convert_alpha()
 
 
@@ -333,8 +344,9 @@ while True:
       if event.type == pygame.QUIT:
           pygame.quit()
           sys.exit()
+
   if page == "home":
-    home_page(time.time())
+    home_page()
   elif page == "start":
     start_page()
   elif page == "game":
