@@ -161,6 +161,7 @@ def game_page():
   level_name = label[random.randint(0, len(label) -1)]
   level_start_time = start_time
   previous_level_name = ""
+  time_per_level = 7
 
   while current_time < total_time:
     current_time = time.time()
@@ -202,7 +203,7 @@ def game_page():
     if button_quit.check_click():
       break
 
-    if current_time - level_start_time >= 5:
+    if current_time - level_start_time >= time_per_level:
       level_completed = True
       level_start_time = time.time()
 
@@ -228,6 +229,7 @@ def game_page():
       pred = label[np.argmax(p)]
       if pred == level_name:
         given_time += increment
+        level_start_time = time.time()
         score += 1
         level_completed = True
     else:
@@ -236,10 +238,12 @@ def game_page():
       window.blit(notvisible,(0,230))
       pred = None
 
-    high_score = max(high_score,score)
-    high_score_file.write(str(high_score))
     pygame.display.update()
     clock.tick(fps)
+  high_score = max(high_score,score)
+  high_score_file_write = open("high_score.txt",'w')
+  high_score_file_write.write(str(high_score))
+  high_score_file_write.close()
   end_game(score, current_time - start_time)
 
 def end_game(score, time_taken):
@@ -331,8 +335,8 @@ gameover = pygame.image.load("Images\gameover3.png").convert_alpha()
 
 #game variables
 page = "home"
-high_score_file = open("high_score.txt","r+")
-high_score = int(high_score_file.read()) 
+high_score_file_read = open("high_score.txt","r")
+high_score = int(high_score_file_read.read()) 
 
 #main loop
 while True:
